@@ -3,12 +3,12 @@ const fs = require('fs');
 
 exports.createBook = (req, res, next) => {
   let bookObject;
-
+console.log(req.file);
   if (req.file) {
     try {
-      bookObject = JSON.parse(req.body.thing); 
+      bookObject = JSON.parse(req.body.book); 
     } catch (error) {
-      return res.status(400).json({ error: "Invalid JSON format in 'thing'" });
+      return res.status(400).json({ error: "Invalid JSON format in 'book'" });
     }
   } 
   else if (req.body.title && req.body.author) {
@@ -40,7 +40,7 @@ exports.getOneBook = (req, res, next) => {
 
 exports.modifyBook = (req, res, next) => {
   const bookObject = req.file ? {
-      ...JSON.parse(req.body.thing),
+      ...JSON.parse(req.body.book),
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   } : { ...req.body };
 
