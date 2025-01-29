@@ -7,11 +7,11 @@ dotenv.config();
 
 const app = express();
 
-// Import Routes
-const userRoutes = require('./routes/routes_user');
-const booksRoutes = require('./routes/routes_livres'); // Renamed for clarity
 
-// Connect to MongoDB
+const userRoutes = require('./routes/routes_user');
+const booksRoutes = require('./routes/routes_livres'); 
+
+
 mongoose.connect(process.env.BDD_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -20,7 +20,7 @@ mongoose.connect(process.env.BDD_URL, {
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
 // Middleware
-app.use(express.json()); // Parses JSON request bodies
+app.use(express.json()); 
 
 // CORS Middleware
 app.use((req, res, next) => {
@@ -30,11 +30,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Static Files
+
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// Register API Routes
+// API Routes
 app.use('/api/auth', userRoutes);
-app.use('/api/books', booksRoutes); // Corrected route path
+app.use('/api/books', booksRoutes);
 
 module.exports = app;

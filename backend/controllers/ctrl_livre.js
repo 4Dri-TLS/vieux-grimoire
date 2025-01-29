@@ -1,20 +1,35 @@
-const Book = require('../models/livre'); // Ensure your model is named properly
+const Book = require('../models/livre');
 const fs = require('fs');
 
 exports.createBook = (req, res, next) => {
-  const bookObject = JSON.parse(req.body.thing);
+  let bookObject;
+
+  if (req.file) {
+    try {
+      bookObject = JSON.parse(req.body.thing); 
+    } catch (error) {
+      return res.status(400).json({ error: "Invalid JSON format in 'thing'" });
+    }
+  } 
+  else if (req.body.title && req.body.author) {
+    bookObject = req.body;
+  } 
+  else {
+    return res.status(400).json({ error: "Invalid request format" });
+  }
+
   delete bookObject._id;
   delete bookObject._userId;
-  
+
   const book = new Book({
-      ...bookObject,
-      userId: req.auth.userId,
-      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    ...bookObject,
+    userId: req.auth.userId,
+    imageUrl: req.file ? `${req.protocol}://${req.get('host')}/images/${req.file.filename}` : '',
   });
 
   book.save()
-  .then(() => res.status(201).json({ message: 'Book created!' }))
-  .catch(error => res.status(400).json({ error }));
+    .then(() => res.status(201).json({ message: 'Book created successfully!' }))
+    .catch(error => res.status(400).json({ error }));
 };
 
 exports.getOneBook = (req, res, next) => {
