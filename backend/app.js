@@ -11,7 +11,7 @@ const mongoose = require('mongoose'); //Import du package mongoose
 app.use(express.json()); //sert à transformer le corps de la requête en objet JS utilisable
 
 
-const stuffRoutes = require('./routes/routes_stuff');
+const stuffRoutes = require('./routes/routes_livres');
 const bodyParser = require('body-parser');
 
 
