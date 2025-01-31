@@ -1,4 +1,5 @@
 const multer = require('multer');
+const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 
@@ -23,9 +24,9 @@ module.exports = (req, res, next) => {
       const outputPath = path.join('images', req.file.originalname.split(' ').join('_').split('.')[0] + Date.now() + '.webp');
       
       try {
-        // await sharp(req.file.buffer)
-        //   .webp({ quality: 80 }) // Optimisation de la qualité de l'image WebP //
-        //   .toFile(outputPath);
+       await sharp(req.file.buffer)
+        .webp({ quality: 80 }) // Optimisation de la qualité de l'image WebP //
+        .toFile(outputPath);
 
         // Mise à jour du chemin du fichier et du nom du fichier pour pointer vers le fichier WebP //
         req.file.path = outputPath;
