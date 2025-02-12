@@ -113,9 +113,8 @@ exports.rateBook = (req, res, next) => {
     return res.status(400).json({ error: 'Invalid rating' });
   }
 
-
-// Recherche du livre
-Book.findOne({ _id: req.params.id })
+  // Recherche du livre
+  Book.findOne({ _id: req.params.id })
     .then(book => {
       if (!book) return res.status(404).json({ error: 'Book not found' });
 
