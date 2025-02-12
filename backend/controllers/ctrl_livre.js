@@ -20,15 +20,24 @@ exports.createBook = (req, res, next) => {
   delete bookObject._id;
   delete bookObject._userId;
 
+  // s'assure que les notes sont un tableau
+  let ratings = bookObject.ratings && Array.isArray(bookObject.ratings) ? bookObject.ratings : [];
+
+  // Calcule la note moyenne
+  const totalRatings = ratings.length;
+  const totalScore = totalRatings > 0 ? ratings.reduce((sum, r) => sum + r.grade, 0) : 0;
+  const averageRating = totalRatings > 0 ? totalScore / totalRatings : 0;
+
   const book = new Book({
     ...bookObject,
     userId: req.auth.userId,
-    ratings: [], // S'assure que le tableau des notations est initialisé
+    ratings, // Stocke les notes
+    averageRating, // Stocke la note moyenne
     imageUrl: req.file ? `${req.protocol}://${req.get('host')}/images/${req.file.filename}` : '',
   });
 
   book.save()
-    .then(() => res.status(201).json({ message: 'Book created successfully!' }))
+    .then(() => res.status(201).json({ message: 'Book created successfully!', book }))
     .catch(error => res.status(400).json({ error }));
 };
 
@@ -39,7 +48,16 @@ exports.getOneBook = (req, res, next) => {
     .then(book => {
       if (!book) return res.status(404).json({ error: 'Livre non trouvé' });
 
-      res.status(200).json({ ...book.toObject(), ratings: book.ratings || [] });
+      // Recalcul du score moyen
+      const totalRatings = book.ratings.length;
+      const totalScore = book.ratings.reduce((sum, r) => sum + r.grade, 0);
+      const averageRating = totalRatings > 0 ? totalScore / totalRatings : 0;
+
+      res.status(200).json({
+        ...book.toObject(),
+        ratings: book.ratings || [],
+        averageRating
+      });
     })
     .catch(error => res.status(500).json({ error }));
 };
@@ -78,7 +96,7 @@ Book.findOne({ _id: req.params.id })
         return res.status(401).json({ message: 'Not authorized' });
       }
 
-      Book.updateOne({ _id: req.params.id }, { ...bookObject, ratings: book.ratings, _id: req.params.id }) // Keep ratings
+      Book.updateOne({ _id: req.params.id }, { ...bookObject, ratings: book.ratings, _id: req.params.id })
         .then(() => res.status(200).json({ message: 'Book updated!' }))
         .catch(error => res.status(401).json({ error }));
     })
@@ -105,15 +123,36 @@ exports.deleteBook = (req, res, next) => {
 };
 
 
+// Donne les 3 meilleurs livres avec la note moyenne la plus élevée
+exports.getBestRating = (req, res, next) => {
+  Book.find()
+    .then(books => {
+      const booksWithAverageRating = books
+        .map(book => {
+          const ratings = book.ratings || [];
+          const avgRating =
+            ratings.length > 0
+              ? ratings.reduce((sum, r) => sum + r.grade, 0) / ratings.length
+              : 0;
+          return { ...book.toObject(), averageRating: avgRating };
+        })
+        .sort((a, b) => b.averageRating - a.averageRating) // classement descendant
+        .slice(0, 3); // recupère les 3 premiers
+
+      res.status(200).json(booksWithAverageRating);
+    })
+    .catch(error => res.status(500).json({ error }));
+};
+
+
 // Ajout de la fonction rateBook pour noter un livre
 exports.rateBook = (req, res, next) => {
   const { userId, grade } = req.body;
 
-  if (!userId || !grade || grade < 1 || grade > 5) {
+  if (!userId || grade === undefined || grade < 1 || grade > 5) {
     return res.status(400).json({ error: 'Invalid rating' });
   }
 
-  // Recherche du livre
   Book.findOne({ _id: req.params.id })
     .then(book => {
       if (!book) return res.status(404).json({ error: 'Book not found' });
@@ -124,7 +163,12 @@ exports.rateBook = (req, res, next) => {
         return res.status(400).json({ error: 'User has already rated this book' });
       }
 
-      book.ratings.push({ userId, grade });
+      book.ratings.push({ userId, grade }); // Stocké correctement
+
+      // Recalcule la note moyenne
+      const totalRatings = book.ratings.length;
+      const totalScore = book.ratings.reduce((sum, r) => sum + r.grade, 0);
+      book.averageRating = totalRatings > 0 ? totalScore / totalRatings : 0;
 
       book.save()
         .then(() => res.status(200).json({ message: 'Rating added!', book }))
