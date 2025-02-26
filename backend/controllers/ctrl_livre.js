@@ -161,13 +161,22 @@ exports.rateBook = (req, res, next) => {
       book.ratings.push({ userId, grade });
 
       // Recalcule la note moyenne
-      const totalRatings = book.ratings.length;
-      const totalScore = book.ratings.reduce((sum, r) => sum + r.grade, 0);
-      book.averageRating = totalRatings > 0 ? totalScore / totalRatings : 0;
 
+      // const totalRatings = book.ratings.length;
+      // const totalScore = book.ratings.reduce((sum, r) => sum + r.grade, 0);
+      // book.averageRating = totalRatings > 0 ? totalScore / totalRatings : 0;
+
+      const totalRatings = book.ratings.length;
+      let totalScore = 0;
+
+      for (const rating of book.ratings) {
+      totalScore += rating.grade;
+      }
+
+      // book.averageRating = totalRatings > 0 ? totalScore / totalRatings : 0;
+      book.averageRating = totalRatings > 0 ? Math.round(totalScore / totalRatings) : 0;
       book.save()
-        .then(() => res.status(200).json({ message: "Note ajoutée!", book }))
-        .catch(error => res.status(500).json({ error }));
-    })
-    .catch(error => res.status(500).json({ error }));
+      .then((updatedBook) => res.status(200).json(updatedBook)) // PB résolu, on renvoie updatedBook non wrappé
+      .catch(error => res.status(500).json({ error }));
+      })
 };
