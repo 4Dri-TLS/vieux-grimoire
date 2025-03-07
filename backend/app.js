@@ -22,7 +22,7 @@ mongoose.connect(process.env.BDD_URL, {
 // Middleware
 app.use(express.json()); 
 
-// CORS Middleware
+// Middleware CORS
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
@@ -33,7 +33,7 @@ app.use((req, res, next) => {
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// API Routes
+// Routes API
 app.use('/api/auth', userRoutes);
 app.use('/api/books', booksRoutes);
 

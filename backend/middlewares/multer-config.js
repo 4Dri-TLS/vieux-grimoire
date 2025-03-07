@@ -25,10 +25,10 @@ module.exports = (req, res, next) => {
       
       try {
        await sharp(req.file.buffer)
-        .webp({ quality: 80 }) // Optimisation de la qualité de l'image WebP //
+        .webp({ quality: 80 }) // Optimisation de la qualité de l'image WebP
         .toFile(outputPath);
 
-        // Mise à jour du chemin du fichier et du nom du fichier pour pointer vers le fichier WebP //
+        // Mise à jour du chemin du fichier et du nom du fichier pour pointer vers le fichier WebP
         req.file.path = outputPath;
         req.file.filename = path.basename(outputPath);
         next();
