@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useUser } from '../../lib/customHooks';
@@ -82,7 +80,7 @@ function Book() {
           <BookInfo book={book} />
           <BookRatingForm
             userRated={userRated}
-            userId={connectedUser?.userId}
+            userId={connectedUser?.userId || null} // évite erreur undefined
             rating={rating}
             setRating={setRating}
             setBook={setBook}

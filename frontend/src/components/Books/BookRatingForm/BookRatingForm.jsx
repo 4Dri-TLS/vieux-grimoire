@@ -19,26 +19,32 @@ function BookRatingForm({
       rating: 0,
     },
   });
+
   useEffect(() => {
     if (formState.dirtyFields.rating) {
-      const rate = document.querySelector('input[name="rating"]:checked').value;
-      setRating(parseInt(rate, 10));
-      formState.dirtyFields.rating = false;
+      const rate = document.querySelector('input[name="rating"]:checked')?.value;
+      if (rate) {
+        setRating(parseInt(rate, 10));
+        formState.dirtyFields.rating = false;
+      }
     }
   }, [formState]);
+
   const onSubmit = async () => {
     if (!connectedUser || !auth) {
       navigate(APP_ROUTES.SIGN_IN);
+      return;
     }
+
     const update = await rateBook(id, userId, rating);
-    console.log(update);
+
     if (update) {
-      // eslint-disable-next-line no-underscore-dangle
-      setBook({ ...update, id: update._id });
+      setBook({ ...update, id: update.id });
     } else {
-      alert(update);
+      alert('Erreur lors de la notation.');
     }
   };
+
   return (
     <div className={styles.BookRatingForm}>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -55,10 +61,15 @@ function BookRatingForm({
 BookRatingForm.propTypes = {
   rating: PropTypes.number.isRequired,
   setRating: PropTypes.func.isRequired,
-  userId: PropTypes.string.isRequired,
+  userId: PropTypes.string, // Optionnnel si aucun utilisateur n'est connecté
   setBook: PropTypes.func.isRequired,
   id: PropTypes.string.isRequired,
   userRated: PropTypes.bool.isRequired,
+};
+
+// defaultProps pour éviter avertissement ESLint
+BookRatingForm.defaultProps = {
+  userId: null, // Par défaut aucun utilisateur connecté
 };
 
 export default BookRatingForm;
