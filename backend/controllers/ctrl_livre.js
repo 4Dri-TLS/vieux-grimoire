@@ -99,21 +99,29 @@ exports.modifyBook = (req, res, next) => {
 };
 
 // Suppression d'un livre
-exports.deleteBook = (req, res, next) => {
-  Book.findOne({ _id: req.params.id })
-    .then(book => {
-      if (book.userId != req.auth.userId) {
-        return res.status(401).json({ error: 'Non autorisé' });
-      }
+exports.deleteBook = async (req, res, next) => {
+  try {
+    const book = await Book.findOne({ _id: req.params.id });
+    if (!book) return res.status(404).json({ error: 'Livre non trouvé' });
 
-      const filename = book.imageUrl.split('/images/')[1];
-      fs.unlink(`images/${filename}`, () => {
-        Book.deleteOne({ _id: req.params.id })
-          .then(() => res.status(200).json({})) // Ne retourne plus de message, juste un statut 200
-          .catch(error => res.status(401).json({ error }));
-      });
-    })
-    .catch(error => res.status(500).json({ error }));
+    if (book.userId != req.auth.userId) {
+      return res.status(401).json({ error: 'Non autorisé' });
+    }
+
+    const filename = book.imageUrl.split('/images/')[1];
+    if (filename) {
+      try {
+        await fs.promises.unlink(`images/${filename}`);
+      } catch (unlinkErr) {
+        console.error(`Erreur suppression image: ${unlinkErr.message}`);
+      }
+    }
+
+    await Book.deleteOne({ _id: req.params.id });
+    res.status(200).json({});
+  } catch (error) {
+    res.status(500).json({ error });
+  }
 };
 
 // Récupère les 3 meilleurs livres avec la meilleure note moyenne
